@@ -7,12 +7,15 @@ class TasksErrorBoundary extends React.Component {
     super(props);
     this.state = { hasError: false };
   }
+
   static getDerivedStateFromError() {
     return { hasError: true };
   }
+
   componentDidCatch(error, errorInfo) {
     console.error("Error in Tasks component:", error, errorInfo);
   }
+
   render() {
     if (this.state.hasError) {
       return <p className="p-4 text-red-600">Something went wrong while loading tasks.</p>;
@@ -148,9 +151,8 @@ export default function Tasks() {
                   )}
                   <p className="text-gray-400 text-xs mt-1">
                     Created: {new Date(task.created_at).toLocaleString()}
-                    {task.completed_at && (
-                      <> | Completed: {new Date(task.completed_at).toLocaleString()}</>
-                    )}
+                    {task.completed_at &&
+                      ` | Completed: ${new Date(task.completed_at).toLocaleString()}`}
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
