@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Socket.io Test</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+  <h1>Socket.io Test</h1>
+  <script>
+    const socket = io("http://localhost:5000");
+
+    socket.on("connect", () => {
+      console.log("Connected:", socket.id);
+      socket.emit("joinWorkspace", "test-workspace");
+
+      socket.emit("chatMessage", {
+        workspaceId: "test-workspace",
+        message: "Hello world!",
+      });
+    });
+
+    socket.on("chatMessage", (msg) => {
+      console.log("Received:", msg);
+    });
+  </script>
+</body>
+</html>
