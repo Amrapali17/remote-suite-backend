@@ -10,17 +10,20 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
+    "@tiptap/core": "^3.6.5",
+    "@tiptap/starter-kit": "^3.6.5",
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
+    "express-fileupload": "^1.5.2",
     "jsonwebtoken": "^9.0.2",
     "openai": "^5.23.0",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "ws": "^8.18.3",
-    "y-websocket": "^3.0.0",
+    "y-websocket": "^1.5.4",
     "yjs": "^13.6.27"
   },
   "devDependencies": {

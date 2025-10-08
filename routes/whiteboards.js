@@ -1,4 +1,4 @@
-// routes/whiteboards.js
+
 import express from 'express';
 import {
   getWhiteboards,

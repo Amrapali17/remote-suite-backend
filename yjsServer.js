@@ -1,33 +1,20 @@
-import WebSocket, { WebSocketServer } from 'ws';
-import { setupWSConnection } from 'y-websocket/bin/utils.js';
-import http from 'http';
-import dotenv from 'dotenv';
-import express from 'express';
-import { saveDocSnapshot } from './controllers/docsController.js';
 
-dotenv.config();
+import express from "express";
+import http from "http";
+import { WebSocketServer } from "ws";
+import { setupWSConnection } from "y-websocket/dist/utils.js"; 
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
-
-wss.on('connection', (conn, req) => {
-  const docName = req.url.slice(1); 
-  setupWSConnection(conn, req, {
-    docName: docName,
-
-    onUpdate: async (update) => {
-      try {
-        
-        const doc_id = docName.split('-')[1]; 
-        await saveDocSnapshot(doc_id, update);
-      } catch (err) {
-        console.error('Error saving doc snapshot:', err);
-      }
-    },
-  });
+wss.on("connection", (conn, req) => {
+  const urlObj = new URL(req.url, `http://${req.headers.host}`);
+  const room = urlObj.searchParams.get("room") || "default-room";
+  setupWSConnection(conn, req, { docName: room });
 });
 
-const PORT = process.env.YJS_PORT || 1234;
-server.listen(PORT, () => console.log(`Yjs WebSocket Server running on port ${PORT}`));
+const PORT = 1234;
+server.listen(PORT, () => {
+  console.log(`✅ Yjs WebSocket Server running on port ${PORT}`);
+});

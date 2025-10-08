@@ -1,13 +1,18 @@
 import express from 'express';
+import fileUpload from 'express-fileupload';
 import {
   getDocs,
   createDoc,
   updateDoc,
   deleteDoc,
-  saveDocSnapshot, 
+  saveDocSnapshot,
+  uploadDocFile,
+  deleteDocFile
 } from '../controllers/docsController.js';
 
 const router = express.Router();
+
+router.use(fileUpload());
 
 
 router.get('/', getDocs);
@@ -26,5 +31,9 @@ router.post('/:doc_id/save', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+
+router.post('/:doc_id/upload', uploadDocFile);
+router.delete('/:doc_id/file', deleteDocFile);
 
 export default router;
