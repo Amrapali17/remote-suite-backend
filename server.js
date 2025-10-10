@@ -18,11 +18,23 @@ dotenv.config();
 
 const app = express();
 
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://remote-suite-frontend.vercel.app",
+  "https://remote-suite-frontend-fsuarzr51-amrapalis-projects-7cb31848.vercel.app"
+];
 
 app.use(cors({
-  origin: FRONTEND_URL,
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true);
+    if (!allowedOrigins.includes(origin)) {
+      return callback(new Error("The CORS policy for this site does not allow access from the specified Origin."), false);
+    }
+    return callback(null, true);
+  },
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 app.use(express.json());
@@ -39,12 +51,19 @@ app.use("/api/notifications", notificationsRoutes);
 const PORT = process.env.PORT || 5000;
 
 const httpServer = createServer(app);
+
 const io = new Server(httpServer, {
   cors: {
-    origin: FRONTEND_URL,
+    origin: function(origin, callback) {
+      if (!origin) return callback(null, true);
+      if (!allowedOrigins.includes(origin)) {
+        return callback(new Error("CORS error"), false);
+      }
+      return callback(null, true);
+    },
     methods: ["GET", "POST"],
-    credentials: true,
-  },
+    credentials: true
+  }
 });
 
 const onlineUsers = {};
@@ -53,12 +72,8 @@ io.on("connection", (socket) => {
   socket.on("joinWorkspace", async (workspaceId, userId) => {
     socket.join(workspaceId);
     socket.userId = userId;
-
     if (!onlineUsers[workspaceId]) onlineUsers[workspaceId] = [];
-    if (!onlineUsers[workspaceId].includes(userId)) {
-      onlineUsers[workspaceId].push(userId);
-    }
-
+    if (!onlineUsers[workspaceId].includes(userId)) onlineUsers[workspaceId].push(userId);
     io.to(workspaceId).emit("workspaceUsers", onlineUsers[workspaceId]);
   });
 
@@ -69,11 +84,8 @@ io.on("connection", (socket) => {
         .insert([{ workspace_id: workspaceId, sender_id: senderId, content, is_ai: is_ai || false }])
         .select()
         .single();
-
       if (!error && data) io.to(workspaceId).emit("chatMessage", data);
-    } catch (err) {
-      console.error(err.message);
-    }
+    } catch (err) {}
   });
 
   socket.on("sendNotification", async ({ workspaceId, userId, type, message, link }) => {
@@ -83,11 +95,8 @@ io.on("connection", (socket) => {
         .insert([{ workspace_id: workspaceId, user_id: userId, type, message, link }])
         .select()
         .single();
-
       if (!error && data) io.to(workspaceId).emit("notification", data);
-    } catch (err) {
-      console.error(err.message);
-    }
+    } catch (err) {}
   });
 
   socket.on("docUpdate", async ({ workspaceId, docId, content, title }) => {
@@ -98,11 +107,8 @@ io.on("connection", (socket) => {
         .eq("id", docId)
         .select()
         .single();
-
       if (!error && data) socket.to(workspaceId).emit("docUpdated", data);
-    } catch (err) {
-      console.error(err.message);
-    }
+    } catch (err) {}
   });
 
   socket.on("whiteboardUpdate", async ({ workspaceId, whiteboardId, drawData }) => {
@@ -111,11 +117,8 @@ io.on("connection", (socket) => {
         .from("whiteboards")
         .update({ data: drawData, updated_at: new Date() })
         .eq("id", whiteboardId);
-
       socket.to(workspaceId).emit("whiteboardUpdate", { whiteboardId, drawData });
-    } catch (err) {
-      console.error(err.message);
-    }
+    } catch (err) {}
   });
 
   socket.on("whiteboardClear", async ({ workspaceId, whiteboardId }) => {
@@ -124,17 +127,13 @@ io.on("connection", (socket) => {
         .from("whiteboards")
         .update({ data: null, updated_at: new Date() })
         .eq("id", whiteboardId);
-
       io.to(workspaceId).emit("whiteboardClear", { whiteboardId });
-    } catch (err) {
-      console.error(err.message);
-    }
+    } catch (err) {}
   });
 
   socket.on("joinRoom", async ({ roomId, userId }) => {
     socket.join(roomId);
     socket.userId = userId;
-
     let userName = userId;
     try {
       const { data: user, error } = await supabase
@@ -142,12 +141,8 @@ io.on("connection", (socket) => {
         .select("id, name")
         .eq("id", userId)
         .single();
-
       if (!error && user) userName = user.name;
-    } catch (err) {
-      console.error(err.message);
-    }
-
+    } catch (err) {}
     io.to(roomId).emit("userJoined", { userId, name: userName });
   });
 
