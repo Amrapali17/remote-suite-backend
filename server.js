@@ -20,17 +20,16 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://remote-suite-frontend.vercel.app",
-  "https://remote-suite-frontend-fsuarzr51-amrapalis-projects-7cb31848.vercel.app"
+  "https://remote-suite-frontend.vercel.app"
 ];
 
 app.use(cors({
-  origin: function(origin, callback) {
+  origin: (origin, callback) => {
     if (!origin) return callback(null, true);
-    if (!allowedOrigins.includes(origin)) {
-      return callback(new Error("The CORS policy for this site does not allow access from the specified Origin."), false);
+    if (allowedOrigins.includes(origin) || origin.endsWith("vercel.app")) {
+      return callback(null, true);
     }
-    return callback(null, true);
+    return callback(new Error("CORS not allowed"), false);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -49,17 +48,16 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/notifications", notificationsRoutes);
 
 const PORT = process.env.PORT || 5000;
-
 const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: function(origin, callback) {
+    origin: (origin, callback) => {
       if (!origin) return callback(null, true);
-      if (!allowedOrigins.includes(origin)) {
-        return callback(new Error("CORS error"), false);
+      if (allowedOrigins.includes(origin) || origin.endsWith("vercel.app")) {
+        return callback(null, true);
       }
-      return callback(null, true);
+      return callback(new Error("CORS not allowed"), false);
     },
     methods: ["GET", "POST"],
     credentials: true
